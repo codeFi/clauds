@@ -40,6 +40,7 @@
 - [How it works](#how-it-works)
 - [Development](#development)
 - [Contributing](#contributing)
+- [Other systems](#other-systems)
 - [License](#license)
 
 ## Why
@@ -423,6 +424,16 @@ Bug reports, ideas, and pull requests are welcome.
 - [SUPPORT.md](SUPPORT.md): where to ask for help
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version
 - [docs/RELEASING.md](docs/RELEASING.md): how a release and its signed update are made
+
+## Other systems
+
+Clauds is for macOS only. Other people port it to other systems:
+
+- **Linux (KDE Plasma):** [Clauds for KDE Plasma](https://github.com/MultiClauds/clauds-kde), a
+  system tray app.
+
+A port is a different project with a different maintainer. It is not tested here. Send questions and
+bug reports for a port to its own repository.
 
 ## Third-party software
 
