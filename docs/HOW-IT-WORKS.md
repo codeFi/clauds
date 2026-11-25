@@ -14,6 +14,7 @@ contributors.
 | `~/Library/Application Support/Clauds/SharedSessions/owners.json` | Which account made each Code session. |
 | `~/Library/Application Support/Clauds/SharedSessions/_conflicts` | Older versions of files that lost a "newer wins" decision. Nothing is deleted. |
 | `~/Library/Application Support/Clauds/usage-debug.json` | The last raw usage answers, for problem finding. |
+| `~/Library/Application Support/Clauds/quit-debug.json` | How long the last quit of Claude took, for problem finding. Numbers only. |
 | `~/.claude/projects` | The conversation text of Code sessions. Claude owns this folder. All accounts use it. |
 
 ## The two ways to switch

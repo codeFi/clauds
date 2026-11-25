@@ -25,7 +25,7 @@ enum SwitchError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .claudeWouldNotQuit:
-            return "Claude did not quit. Close Claude yourself, then try again."
+            return "Claude did not quit in 60 seconds. Close Claude yourself, then try again."
         case .profileFolderInTheWay(let path):
             return "A folder is already at \(path). Nothing was changed."
         case .message(let text):
@@ -544,17 +544,29 @@ final class AccountStore: ObservableObject {
         NSWorkspace.shared.openApplication(at: url, configuration: config)
     }
 
+    /// Quits every Claude copy and waits until its process is gone.
+    ///
+    /// The check uses the process id, not `NSRunningApplication.isTerminated`: a Claude copy with
+    /// open sessions can take much longer than a second to end, and the data folders must not move
+    /// while its process is alive.
     private func quitClaude() async throws {
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: Self.claudeBundleID)
         guard !running.isEmpty else { return }
+        let pids = running.map(\.processIdentifier)
         running.forEach { $0.terminate() }
 
-        // Wait up to 20 seconds for a clean quit.
-        for _ in 0..<80 {
-            if running.allSatisfy(\.isTerminated) { break }
+        let start = Date()
+        var flagSeconds: Double?
+        var processSeconds: Double?
+        // Wait up to 60 seconds for a clean quit.
+        for _ in 0..<240 {
+            let now = Date().timeIntervalSince(start)
+            if flagSeconds == nil, running.allSatisfy(\.isTerminated) { flagSeconds = now }
+            if pids.allSatisfy({ !Self.processIsAlive($0) }) { processSeconds = now; break }
             try await Task.sleep(for: .milliseconds(250))
         }
-        guard running.allSatisfy(\.isTerminated) else { throw SwitchError.claudeWouldNotQuit }
+        recordQuit(copies: pids.count, flagSeconds: flagSeconds, processSeconds: processSeconds)
+        guard processSeconds != nil else { throw SwitchError.claudeWouldNotQuit }
 
         // Wait up to 10 more seconds for helper processes (renderers, VM) to exit and release files.
         for _ in 0..<40 {
@@ -562,6 +574,22 @@ final class AccountStore: ObservableObject {
             try await Task.sleep(for: .milliseconds(250))
         }
         try await Task.sleep(for: .seconds(1))
+    }
+
+    /// True while the process exists. `kill` with signal 0 sends nothing: it only asks.
+    nonisolated static func processIsAlive(_ pid: pid_t) -> Bool {
+        kill(pid, 0) == 0 || errno == EPERM
+    }
+
+    /// Writes how long the last quit took to `quit-debug.json`. It holds numbers only.
+    private func recordQuit(copies: Int, flagSeconds: Double?, processSeconds: Double?) {
+        var record: [String: Any] = ["date": ISO8601DateFormatter().string(from: Date()), "copies": copies]
+        if let flagSeconds { record["secondsUntilAppKitSaidQuit"] = (flagSeconds * 100).rounded() / 100 }
+        if let processSeconds { record["secondsUntilProcessGone"] = (processSeconds * 100).rounded() / 100 }
+        guard let data = try? JSONSerialization.data(withJSONObject: record, options: [.prettyPrinted, .sortedKeys]) else { return }
+        let file = supportDir.appendingPathComponent("quit-debug.json")
+        try? data.write(to: file, options: .atomic)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
     }
 
     /// True while any process runs from inside Claude.app.

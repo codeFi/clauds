@@ -7,6 +7,18 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-25
+
+### Fixed
+
+- A switch could stop with "Claude did not quit" after 20 seconds, and Claude stayed closed, although
+  Claude had quit. The app trusted the answer of macOS about the quit, and that answer could stay
+  wrong. The app now checks the Claude process itself, and it waits up to 60 seconds.
+
+### Added
+
+- README: a link to the port for KDE Plasma on Linux, made by a different maintainer.
+
 ## [1.0.0] - 2026-11-16
 
 First release with the name Clauds.
@@ -31,5 +43,6 @@ First release with the name Clauds.
 - Data from the first app name ("Claude Switcher") moves to the new folder at the first start
   while Claude is closed.
 
-[Unreleased]: https://github.com/codeFi/clauds/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/codeFi/clauds/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/codeFi/clauds/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/codeFi/clauds/releases/tag/v1.0.0
