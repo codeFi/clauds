@@ -7,6 +7,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- A switch could stop with "Claude did not quit" after 20 seconds, and Claude stayed closed, although
+  Claude had quit. The app trusted the answer of macOS about the quit, and that answer could stay
+  wrong. The app now checks the Claude process itself, and it waits up to 60 seconds.
+
 ## [1.0.0] - 2026-11-16
 
 First release with the name Clauds.
